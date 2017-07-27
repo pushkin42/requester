@@ -1,5 +1,5 @@
 {
-    "name": "Viktor-Melnikov/requester",
+    "name": "viktor-melnikov/requester",
     "description": "Wrapper for curl request",
     "type": "library",
     "license": "MIT",
