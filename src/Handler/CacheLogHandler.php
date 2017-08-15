@@ -63,8 +63,7 @@ class CacheLogHandler extends DefaultHandler
 
         //если логгер был инициализирован прежде кэша, значит пропихнем его туда.
         //в противном случае логи все равно выключены.
-        if ( $this->log instanceof LoggerAbstract )
-        {
+        if ( $this->log instanceof LoggerAbstract ) {
             $this->cache->setLogger( $this->log->getLogger() );
         }
 
@@ -82,16 +81,13 @@ class CacheLogHandler extends DefaultHandler
      */
     public function searchAlias( $alias, array $aliases = [] )
     {
-        if ( isset( $aliases[ $alias ] ) )
-        {
+        if ( isset( $aliases[ $alias ] ) ) {
             $ttl = $aliases[ $alias ];
         }
-        else if ( array_search( $alias, (array)$aliases ) !== false )
-        {
+        else if ( array_search( $alias, (array)$aliases )!==false ) {
             $ttl = 3600;
         }
-        else
-        {
+        else {
             return false;
         }
 
@@ -117,13 +113,11 @@ class CacheLogHandler extends DefaultHandler
      */
     public function beforeExecuteReturn()
     {
-        if ( $this->request->config->has( 'cache.aliases' ) && array_key_exists( $this->request->alias, $this->request->config->get( 'cache.aliases' )->toArray() ) )
-        {
+        if ( $this->request->config->has( 'cache.aliases' ) && array_key_exists( $this->request->alias, $this->request->config->get( 'cache.aliases' )->toArray() ) ) {
 
             $item = $this->cache->getItem( $this->request->alias );
 
-            if ( !$item->isMiss() )
-            {
+            if ( !$item->isMiss() ) {
 
                 return $item->get();
             }
@@ -134,13 +128,11 @@ class CacheLogHandler extends DefaultHandler
 
     public function afterExecuteReturn( $body )
     {
-        if ( $this->request->config->has( 'cache.aliases' ) && array_key_exists( $this->request->alias, $this->request->config->get( 'cache.aliases' )->toArray() ) )
-        {
+        if ( $this->request->config->has( 'cache.aliases' ) && array_key_exists( $this->request->alias, $this->request->config->get( 'cache.aliases' )->toArray() ) ) {
 
             $hasSubqueryOrLifetime = $this->searchAlias( $this->request->alias, $this->request->config->get( 'cache.aliases' )->toArray() );
 
-            if ( $hasSubqueryOrLifetime )
-            {
+            if ( $hasSubqueryOrLifetime ) {
                 $item = $this->cache->getItem( $this->request->alias );
 
                 $this->cache->save( $item->expiresAfter( $hasSubqueryOrLifetime )->set( $body ) );
@@ -189,14 +181,14 @@ class CacheLogHandler extends DefaultHandler
     {
         return [
             'channel' => 'no_channel',
-            'path'    => $this->app->make( 'path.storage' ) . 'logs',
+            'path'    => storage_path( 'logs' ),
         ];
     }
 
     private function getCacheDefaultConfig()
     {
         return [
-            'path' => $this->app->make( 'path.storage' ) . 'cache',
+            'path'    => storage_path( 'cache' ),
         ];
     }
 }
