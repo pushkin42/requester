@@ -13,7 +13,8 @@
         "php": ">=5.6",
         "guzzlehttp/guzzle": "^6.3",
         "monolog/monolog": "^1.23",
-        "tedivm/stash": "^0.14.2"
+        "tedivm/stash": "^0.14.2",
+        "illuminate/support": "^5.0,<5.6"
     },
     "autoload": {
         "psr-4": {

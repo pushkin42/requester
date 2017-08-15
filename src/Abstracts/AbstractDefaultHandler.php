@@ -8,6 +8,7 @@
 
 namespace Requester\Abstracts;
 
+use Requester\ArrayToXml;
 use Requester\Request;
 use Requester\Interfaces\HandlerInterface;
 use Requester\Collection;
@@ -264,19 +265,25 @@ abstract class AbstractDefaultHandler implements HandlerInterface
      *
      * Array =>
      * [
-     *    'auth' => [
-     *        'login' => 'q',
-     *        'pwd' => 'q'
-     *    ]
+     *    'balanceRequest' => [
+     *      '_attributes' => [
+     *          'agentId'       => $this->config->get( 'agent_id' ),
+     *          'clientOrderId' => 'balance_' . time(),
+     *          'requestDT'     => date( 'Y-m-d\TH:i:s.000\Z' ),
+     *      ],
+     *    ],
+     *
+     *    'balanceRequest' // optional - may be root, request etc.
      * ]
      *
-     * @return bool
+     * @return string
      */
     public function getXml()
     {
         $arguments = func_get_args();
 
         $data = array_shift( $arguments );
+        $nodename = array_shift( $arguments );
         $auth = false;
 
         if ( array_key_exists( 'auth', $data ) ) {
@@ -288,18 +295,7 @@ abstract class AbstractDefaultHandler implements HandlerInterface
             $data[ 'auth' ] = $this->xmlAuth();
         }
 
-        $xml_header = '<?xml version="1.0" standalone="yes"?>';
-
-        $xml_root = 'root';
-
-        $request_body = $xml_header;
-        $request_body .= "<" . $xml_root . ">\n";
-
-        foreach ( $data as $type => $params ) {
-            $request_body .= '<' . $type . ' ' . $this->arrayToParams( $params ) . " />\n";
-        }
-
-        $request_body .= '</' . $xml_root . '>';
+        $request_body = ArrayToXml::convert($data, $nodename);
 
         return $request_body;
     }
@@ -315,24 +311,6 @@ abstract class AbstractDefaultHandler implements HandlerInterface
             'login'    => $this->request->config[ 'auth.login' ],
             'password' => $this->request->config[ 'auth.password' ],
         ];
-    }
-
-    /**
-     * Формирование параметров xml
-     *
-     * @param array $data
-     *
-     * @return bool|string
-     */
-    private function arrayToParams( array $data )
-    {
-        $result = [];
-
-        foreach ( $data as $key => $value ) {
-            $result [] = $key . ' = "' . $value . '"';
-        }
-
-        return ( !empty( $result ) ) ? implode( " ", $result ) : '';
     }
 
     /**
