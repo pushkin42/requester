@@ -49,4 +49,51 @@ class HelperFormatter
 
         return $five;
     }
+
+    public function getAdj( $num, $one, $two )
+    {
+        $num %= 100;
+
+        if($num == 11) return $two;
+
+        $num %= 10;
+
+        if($num == 1) return $one;
+
+        return $two;
+    }
+
+    /**
+     * Форматирование телефонного номера (убираем все спец символы и оставляем только цифры)
+     *
+     * @param string $string
+     *
+     * @return bool|string
+     * @internal param array|string $format
+     */
+    public static function clearAllSymbols( $string )
+    {
+        $string = preg_replace( '/[^0-9]/', '', $string );
+
+        return $string;
+    }
+
+    /**
+     * Форматирование телефонного номера (убираем все спец символы и оставляем только цифры)
+     *
+     * @param string $phone
+     *
+     * @return bool|string
+     * @internal param array|string $format
+     */
+    public static function phone_format( $phone )
+    {
+        $phone = preg_replace( '/[^0-9]/', '', $phone );
+
+        if ( !empty($phone) && $phone[ 0 ]=='8' ) {
+            $phone[ 0 ] = '7';
+        }
+
+        return $phone;
+    }
 }

@@ -39,6 +39,8 @@ class Request
     public $auth = [];
     public $content_type; // mime
 
+    const OPENSSL_ENCRYPT_CMD = 'openssl smime -sign -signer "%s" -inkey "%s" -nochain -nocerts -outform PEM -nodetach -passin pass:%s';
+
     /**
      * Алиас для того, чтобы кэшировать запросы. Запросы без алиаса не кэшируются.
      *
@@ -170,6 +172,39 @@ class Request
     }
 
     /**
+     * Прикрепление сертификата
+     *
+     * @param $path
+     * @param $password
+     *
+     * @return $this
+     */
+    public function cert( $path, $password = null )
+    {
+        $options = [ 'cert' => [$path, $password] ];
+
+        $this->options += $options;
+
+        return $this;
+    }
+
+    /**
+     * Прикрепление ключа к сертификату
+     *
+     * @param $path
+     *
+     * @return $this
+     */
+    public function ssl_key( $path )
+    {
+        $options = [ 'ssl_key' => $path ];
+
+        $this->options += $options;
+
+        return $this;
+    }
+
+    /**
      * Set the body of the request
      *
      *
@@ -296,7 +331,10 @@ class Request
         $this->handle( 'beforeExecute' );
 
         try {
+
             $client = new Client();
+
+            $this->options += ['timeout' => 5];
 
             $res = $client->request(
                 $this->method,
@@ -315,6 +353,7 @@ class Request
             return $body;
 
         } catch ( RequestException $e ) {
+
             $msg = $e->getRequest();
 
             if ( $e->hasResponse() ) {
@@ -327,7 +366,6 @@ class Request
             return $this->handle( 'error', $e->getMessage(), [ 'exception' => $e ] );
         }
     }
-
     /**
      * Данные с соответствуюшим ключом, исходя из типа данных, формы данных и метода передачи данных
      *
