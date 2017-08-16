@@ -8,6 +8,7 @@
 
 namespace Requester;
 
+use GuzzleHttp\Psr7\Response;
 use Requester\Exceptions\CurlErrorException;
 use Requester\Exceptions\ErrorException;
 use Requester\Handler\DefaultHandler;
@@ -319,10 +320,13 @@ class Request
     {
         $this->hash();
 
-        if ($data = $this->handle('beforeExecuteReturn'))
+        if ( $data = $this->handle( 'beforeExecuteReturn' ) )
+        {
             return $data;
+        }
 
-        if ( !empty( $this->payload ) ) {
+        if ( !empty( $this->payload ) )
+        {
             $this->serialized_payload = $this->handle( 'serialize', $this->payload );
         }
 
@@ -330,11 +334,12 @@ class Request
 
         $this->handle( 'beforeExecute' );
 
-        try {
+        $exception = false;
+        $res       = null;
 
+        try
+        {
             $client = new Client();
-
-            $this->options += ['timeout' => 5];
 
             $res = $client->request(
                 $this->method,
@@ -342,29 +347,44 @@ class Request
                 $this->headers + $this->formatBody() + $this->options
             );
 
+            $exception = 'qwe';
+        }
+        catch ( Exception $e )
+        {
+            $exception = $e;
+        }
+
+        if ( is_bool( $exception ) && $res instanceof Response )
+        {
             $body = $this->handle( 'parse', $res->getBody() );
 
-            if ( $data = $this->handle( 'afterExecuteReturn', $body ) ) {
+            if ( $data = $this->handle( 'afterExecuteReturn', $body ) )
+            {
                 return $data;
             }
 
             $this->handle( 'afterExecute', $body );
 
             return $body;
-
-        } catch ( RequestException $e ) {
-
-            $msg = $e->getRequest();
-
-            if ( $e->hasResponse() ) {
-                $msg = $e->getResponse();
-            }
-
-            return $this->handle( 'error', $msg->getBody()->getContents(), [ 'exception' => $e ] );
-
-        } catch ( Exception $e ) {
-            return $this->handle( 'error', $e->getMessage(), [ 'exception' => $e ] );
         }
+
+        $msg = null;
+
+        if($exception instanceof Exception)
+        {
+            $msg = $exception->getMessage();
+
+            if($exception instanceof RequestException)
+            {
+                $msg = $exception->getRequest();
+
+                if ( $exception->hasResponse() ) {
+                    $msg = $exception->getResponse();
+                }
+            }
+        }
+
+        return $this->handle( 'error', $msg, [ 'exception' => $exception instanceof Exception ? $exception : null ] );
     }
     /**
      * Данные с соответствуюшим ключом, исходя из типа данных, формы данных и метода передачи данных
