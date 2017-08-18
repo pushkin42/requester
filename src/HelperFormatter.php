@@ -10,21 +10,22 @@ namespace Requester;
 
 use DateTime;
 use IntlDateFormatter;
+use Requester\Exceptions\ValidateInputException;
 
 class HelperFormatter
 {
-    public function formatDate($date, $pattern = '')
+    public function formatDate( $date, $pattern = '' )
     {
-        if( ! $date instanceof DateTime)
+        if ( !$date instanceof DateTime )
         {
-            $date = new DateTime($date);
+            $date = new DateTime( $date );
         }
 
-        $intl = ( new IntlDateFormatter('ru_RU', IntlDateFormatter::FULL, IntlDateFormatter::FULL, 'Europe/Moscow') );
+        $intl = ( new IntlDateFormatter( 'ru_RU', IntlDateFormatter::FULL, IntlDateFormatter::FULL, 'Europe/Moscow' ) );
 
-        $intl->setPattern($pattern);
+        $intl->setPattern( $pattern );
 
-        return $intl->format($date);
+        return $intl->format( $date );
     }
 
     public function getNoun( $num, $one, $two, $five )
@@ -50,19 +51,6 @@ class HelperFormatter
         return $five;
     }
 
-    public function getAdj( $num, $one, $two )
-    {
-        $num %= 100;
-
-        if($num == 11) return $two;
-
-        $num %= 10;
-
-        if($num == 1) return $one;
-
-        return $two;
-    }
-
     /**
      * Форматирование телефонного номера (убираем все спец символы и оставляем только цифры)
      *
@@ -84,14 +72,25 @@ class HelperFormatter
      * @param string $phone
      *
      * @return bool|string
+     * @throws ValidateInputException
      * @internal param array|string $format
      */
     public static function phone_format( $phone )
     {
         $phone = preg_replace( '/[^0-9]/', '', $phone );
 
-        if ( !empty($phone) && $phone[ 0 ]=='8' ) {
-            $phone[ 0 ] = '7';
+        if ( strlen( $phone ) < 10 )
+        {
+            throw new ValidateInputException( null, 400, [ 'error_code' => 14, 'error_params' => [ 'номер телефона' ] ] );
+        }
+
+        if ( !empty( $phone ) && strlen( $phone ) == 11 && $phone[0] == '8' )
+        {
+            $phone[0] = '7';
+        }
+        elseif ( strlen( $phone ) == 10 )
+        {
+            $phone = '7' . $phone;
         }
 
         return $phone;

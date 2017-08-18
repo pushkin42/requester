@@ -9,11 +9,8 @@
 namespace Requester;
 
 use GuzzleHttp\Psr7\Response;
-use Requester\Exceptions\CurlErrorException;
-use Requester\Exceptions\ErrorException;
 use Requester\Handler\DefaultHandler;
 use Requester\Interfaces\HandlerInterface;
-use Requester\Collection;
 use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
@@ -34,10 +31,10 @@ class Request
     public $uri;
     public $payload;
     public $serialized_payload = null;
-    public $method = Http::GET;
-    public $headers = [];
-    public $options = [];
-    public $auth = [];
+    public $method             = Http::GET;
+    public $headers            = [];
+    public $options            = [];
+    public $auth               = [];
     public $content_type; // mime
 
     const OPENSSL_ENCRYPT_CMD = 'openssl smime -sign -signer "%s" -inkey "%s" -nochain -nocerts -outform PEM -nodetach -passin pass:%s';
@@ -106,10 +103,13 @@ class Request
     {
         $args = func_get_args();
 
-        if ( is_array( $args[ 0 ] ) ) {
+        if ( is_array( $args[ 0 ] ) )
+        {
             foreach ( $args[ 0 ] as $key => $value )
                 $this->headers[ 'headers' ][ $key ] = $value;
-        } else {
+        }
+        else
+        {
             $this->headers[ 'headers' ][ $args[ 0 ] ] = $args[ 1 ];
         }
 
@@ -127,10 +127,13 @@ class Request
 
         $options = [];
 
-        if ( is_array( $args[ 0 ] ) ) {
+        if ( is_array( $args[ 0 ] ) )
+        {
             foreach ( $args[ 0 ] as $key => $value )
                 $options[ $key ] = $value;
-        } else {
+        }
+        else
+        {
             $options[ $args[ 0 ] ] = $args[ 1 ];
         }
 
@@ -149,7 +152,8 @@ class Request
      */
     public function setMethod( $method )
     {
-        if ( empty( $method ) ) {
+        if ( empty( $method ) )
+        {
             return $this;
         }
 
@@ -182,7 +186,7 @@ class Request
      */
     public function cert( $path, $password = null )
     {
-        $options = [ 'cert' => [$path, $password] ];
+        $options = [ 'cert' => [ $path, $password ] ];
 
         $this->options += $options;
 
@@ -215,7 +219,8 @@ class Request
      */
     public function body( $payload )
     {
-        if ( empty( $payload ) ) {
+        if ( empty( $payload ) )
+        {
             return $this;
         }
         $this->payload = $payload;
@@ -234,7 +239,8 @@ class Request
     {
         $handler = new $handler( $this->config );
 
-        if ( !$handler instanceof HandlerInterface ) {
+        if ( !$handler instanceof HandlerInterface )
+        {
             throw new \RuntimeException( 'Handler not initialized. Please use Handler class instanceof HandlerInterface.' );
         }
 
@@ -253,7 +259,8 @@ class Request
      */
     public function setMime( $mime )
     {
-        if ( empty( $mime ) ) {
+        if ( empty( $mime ) )
+        {
             return $this;
         }
 
@@ -289,7 +296,8 @@ class Request
      */
     public function setAlias( $name )
     {
-        if ( empty( $name ) ) {
+        if ( empty( $name ) )
+        {
             return $this;
         }
         $this->alias = $name;
@@ -304,7 +312,7 @@ class Request
      */
     public function handle()
     {
-        $arguments = func_get_args();
+        $arguments    = func_get_args();
         $handleMethod = array_shift( $arguments );
 
         return call_user_func_array( [ $this->handler->initialize( $this ), $handleMethod ], $arguments );
@@ -313,8 +321,6 @@ class Request
     /**
      * Actually send off the request, and parse the response
      * @return array|string of parsed results
-     * @throws CurlErrorException
-     * @throws ErrorException
      */
     public function send()
     {
@@ -346,8 +352,6 @@ class Request
                 $this->uri,
                 $this->headers + $this->formatBody() + $this->options
             );
-
-            $exception = 'qwe';
         }
         catch ( Exception $e )
         {
@@ -386,6 +390,7 @@ class Request
 
         return $this->handle( 'error', $msg, [ 'exception' => $exception instanceof Exception ? $exception : null ] );
     }
+
     /**
      * Данные с соответствуюшим ключом, исходя из типа данных, формы данных и метода передачи данных
      *
@@ -395,13 +400,20 @@ class Request
     {
         $body = [];
 
-        if ( $this->content_type == Mime::JSON ) {
+        if ( $this->content_type == Mime::JSON )
+        {
             $body[ 'json' ] = $this->serialized_payload;
-        } elseif ( $this->method == Http::GET ) {
+        }
+        elseif ( $this->method == Http::GET )
+        {
             $body[ 'query' ] = $this->serialized_payload;
-        } elseif ( is_array( $this->serialized_payload ) ) {
+        }
+        elseif ( is_array( $this->serialized_payload ) )
+        {
             $body[ 'form_params' ] = $this->serialized_payload;
-        } else {
+        }
+        else
+        {
             $body[ 'body' ] = $this->serialized_payload;
         }
 
@@ -417,16 +429,21 @@ class Request
     {
         $url = '';
 
-        if ( empty( $this->uri ) ) //$this->config['url']
+        if ( empty( $this->uri ) )
         {
             $url = $this->config[ 'url' ];
-        } elseif ( str_contains( $this->uri, [ 'http', 'https' ] ) ) {
+        }
+        elseif ( str_contains( $this->uri, [ 'http', 'https' ] ) )
+        {
             $url = $this->uri;
-        } elseif ( $this->config->has( 'url' ) ) {
+        }
+        elseif ( $this->config->has( 'url' ) )
+        {
             $url = $this->config[ 'url' ] . $this->uri;
         }
 
-        if ( empty( $url ) ) {
+        if ( empty( $url ) )
+        {
             throw new RuntimeException( 'Attempting to send a request before defining a URI endpoint.' );
         }
 
