@@ -383,7 +383,7 @@ class Request
                 $msg = $exception->getRequest();
 
                 if ( $exception->hasResponse() ) {
-                    $msg = $exception->getResponse();
+                    $msg = $exception->getResponse()->getBody()->getContents();
                 }
             }
         }
