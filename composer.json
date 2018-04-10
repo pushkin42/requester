@@ -12,9 +12,9 @@
     "require": {
         "php": ">=5.6",
         "guzzlehttp/guzzle": "~6.0",
-        "monolog/monolog": "^1.23",
+        "monolog/monolog": "1.*",
         "tedivm/stash": "^0.14.2",
-        "illuminate/support": "^5.0,<5.6"
+        "illuminate/support": "5.*"
     },
     "autoload": {
         "psr-4": {
