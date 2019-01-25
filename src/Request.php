@@ -8,12 +8,12 @@
 
 namespace Requester;
 
-use GuzzleHttp\Psr7\Response;
-use Requester\Handler\DefaultHandler;
-use Requester\Interfaces\HandlerInterface;
 use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\Psr7\Response;
+use Requester\Handler\DefaultHandler;
+use Requester\Interfaces\HandlerInterface;
 use RuntimeException;
 
 class Request
@@ -34,6 +34,8 @@ class Request
     public $method             = Http::GET;
     public $headers            = [];
     public $options            = [];
+    public $files              = [];
+    public $extras             = [];
     public $auth               = [];
     public $content_type; // mime
 
@@ -62,7 +64,7 @@ class Request
 
     public function __construct()
     {
-        $this->setHandler( DefaultHandler::class );
+        $this->setHandler(DefaultHandler::class);
     }
 
     /**
@@ -72,9 +74,9 @@ class Request
      *
      * @return $this
      */
-    public function setConfig( $data )
+    public function setConfig($data)
     {
-        $this->config = Collection::make( $data );
+        $this->config = Collection::make($data);
 
         return $this;
     }
@@ -86,7 +88,7 @@ class Request
      *
      * @return $this
      */
-    public function setEndpoint( $url )
+    public function setEndpoint($url)
     {
         $this->uri = $url;
 
@@ -103,14 +105,11 @@ class Request
     {
         $args = func_get_args();
 
-        if ( is_array( $args[ 0 ] ) )
-        {
-            foreach ( $args[ 0 ] as $key => $value )
-                $this->headers[ 'headers' ][ $key ] = $value;
-        }
-        else
-        {
-            $this->headers[ 'headers' ][ $args[ 0 ] ] = $args[ 1 ];
+        if (is_array($args[0])) {
+            foreach ($args[0] as $key => $value)
+                $this->headers['headers'][$key] = $value;
+        } else {
+            $this->headers['headers'][$args[0]] = $args[1];
         }
 
         return $this;
@@ -127,14 +126,11 @@ class Request
 
         $options = [];
 
-        if ( is_array( $args[ 0 ] ) )
-        {
-            foreach ( $args[ 0 ] as $key => $value )
-                $options[ $key ] = $value;
-        }
-        else
-        {
-            $options[ $args[ 0 ] ] = $args[ 1 ];
+        if (is_array($args[0])) {
+            foreach ($args[0] as $key => $value)
+                $options[$key] = $value;
+        } else {
+            $options[$args[0]] = $args[1];
         }
 
         $this->options += $options;
@@ -150,14 +146,43 @@ class Request
      *
      * @param string $method
      */
-    public function setMethod( $method )
+    public function setMethod($method)
     {
-        if ( empty( $method ) )
-        {
-            return $this;
+        if (!empty($method)) {
+            $this->method = $method;
         }
 
-        $this->method = $method;
+        return $this;
+    }
+
+    /**
+     * Set the method.  Shouldn't be called often as the preferred syntax
+     * for instantiation is the method specific factory methods.
+     *
+     * @param array $file
+     *
+     * @return Request this
+     *
+     */
+    public function setFile(array $file)
+    {
+        if (!empty($file)) {
+            $this->files = $file;
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param array $extra
+     *
+     * @return $this
+     */
+    public function setExtras(array $extra)
+    {
+        if (!empty($extra)) {
+            $this->extras = array_merge($this->extras, $extra);
+        }
 
         return $this;
     }
@@ -169,7 +194,7 @@ class Request
      */
     public function basicAuth()
     {
-        $auth = [ 'auth' => [ $this->config->get( 'auth.basic.username' ), $this->config->get( 'auth.basic.password' ) ] ];
+        $auth = ['auth' => [$this->config->get('auth.basic.username'), $this->config->get('auth.basic.password')]];
 
         $this->options += $auth;
 
@@ -184,9 +209,9 @@ class Request
      *
      * @return $this
      */
-    public function cert( $path, $password = null )
+    public function cert($path, $password = null)
     {
-        $options = [ 'cert' => [ $path, $password ] ];
+        $options = ['cert' => [$path, $password]];
 
         $this->options += $options;
 
@@ -200,9 +225,9 @@ class Request
      *
      * @return $this
      */
-    public function ssl_key( $path )
+    public function ssl_key($path)
     {
-        $options = [ 'ssl_key' => $path ];
+        $options = ['ssl_key' => $path];
 
         $this->options += $options;
 
@@ -217,13 +242,11 @@ class Request
      *
      * @return Request this
      */
-    public function body( $payload )
+    public function body($payload)
     {
-        if ( empty( $payload ) )
-        {
-            return $this;
+        if (!empty($payload) || is_array($payload)) {
+            $this->payload = $payload;
         }
-        $this->payload = $payload;
 
         return $this;
     }
@@ -235,13 +258,12 @@ class Request
      *
      * @return $this
      */
-    public function setHandler( $handler )
+    public function setHandler($handler)
     {
-        $handler = new $handler( $this->config );
+        $handler = new $handler($this->config);
 
-        if ( !$handler instanceof HandlerInterface )
-        {
-            throw new \RuntimeException( 'Handler not initialized. Please use Handler class instanceof HandlerInterface.' );
+        if (!$handler instanceof HandlerInterface) {
+            throw new \RuntimeException('Handler not initialized. Please use Handler class instanceof HandlerInterface.');
         }
 
         $this->handler = $handler;
@@ -257,16 +279,13 @@ class Request
      *
      * @param string $mime mime type to use for content type and expected return type
      */
-    public function setMime( $mime )
+    public function setMime($mime)
     {
-        if ( empty( $mime ) )
-        {
-            return $this;
+        if (!empty($mime)) {
+            $this->setContentType(
+                Mime::getFullMime($mime)
+            );
         }
-
-        $this->setContentType(
-            Mime::getFullMime( $mime )
-        );
 
         return $this;
     }
@@ -278,11 +297,11 @@ class Request
      *
      * @return $this
      */
-    public function setContentType( $contentType )
+    public function setContentType($contentType)
     {
         $this->content_type = $contentType;
 
-        $this->headers[ 'headers' ][ 'Content-type' ] = $contentType;
+        $this->headers['headers']['Content-type'] = $contentType;
 
         return $this;
     }
@@ -294,13 +313,11 @@ class Request
      *
      * @return $this
      */
-    public function setAlias( $name )
+    public function setAlias($name)
     {
-        if ( empty( $name ) )
-        {
-            return $this;
+        if (!empty($name)) {
+            $this->alias = $name;
         }
-        $this->alias = $name;
 
         return $this;
     }
@@ -313,38 +330,36 @@ class Request
     public function handle()
     {
         $arguments    = func_get_args();
-        $handleMethod = array_shift( $arguments );
+        $handleMethod = array_shift($arguments);
 
-        return call_user_func_array( [ $this->handler->initialize( $this ), $handleMethod ], $arguments );
+        return call_user_func_array([$this->handler->initialize($this), $handleMethod], $arguments);
     }
 
     /**
      * Actually send off the request, and parse the response
      * @return array|string of parsed results
+     * @throws \GuzzleHttp\Exception\GuzzleException
      */
     public function send()
     {
         $this->hash();
 
-        if ( $data = $this->handle( 'beforeExecuteReturn' ) )
-        {
+        if ($data = $this->handle('beforeExecuteReturn')) {
             return $data;
         }
 
-        if ( !empty( $this->payload ) )
-        {
-            $this->serialized_payload = $this->handle( 'serialize', $this->payload );
+        if (!empty($this->payload)) {
+            $this->serialized_payload = $this->handle('serialize', $this->payload);
         }
 
         $this->uri = $this->formatEndpoint();
 
-        $this->handle( 'beforeExecute' );
+        $this->handle('beforeExecute');
 
         $exception = false;
         $res       = null;
 
-        try
-        {
+        try {
             $client = new Client();
 
             $res = $client->request(
@@ -352,43 +367,38 @@ class Request
                 $this->uri,
                 $this->headers + $this->formatBody() + $this->options
             );
-        }
-        catch ( Exception $e )
-        {
+
+        } catch (Exception $e) {
             $exception = $e;
         }
 
-        if ( is_bool( $exception ) && $res instanceof Response )
-        {
-            $body = $this->handle( 'parse', $res->getBody() );
+        if (is_bool($exception) && $res instanceof Response) {
+            $body = $this->handle('parse', $res->getBody());
 
-            if ( $data = $this->handle( 'afterExecuteReturn', $body ) )
-            {
+            if ($data = $this->handle('afterExecuteReturn', $body)) {
                 return $data;
             }
 
-            $this->handle( 'afterExecute', $body );
+            $this->handle('afterExecute', $body);
 
             return $body;
         }
 
         $msg = null;
 
-        if($exception instanceof Exception)
-        {
+        if ($exception instanceof Exception) {
             $msg = $exception->getMessage();
 
-            if($exception instanceof RequestException)
-            {
+            if ($exception instanceof RequestException) {
                 $msg = $exception->getRequest();
 
-                if ( $exception->hasResponse() ) {
+                if ($exception->hasResponse()) {
                     $msg = $exception->getResponse()->getBody()->getContents();
                 }
             }
         }
 
-        return $this->handle( 'error', $msg, [ 'exception' => $exception instanceof Exception ? $exception : null ] );
+        return $this->handle('error', $msg, ['exception' => $exception instanceof Exception ? $exception : null]);
     }
 
     /**
@@ -400,21 +410,31 @@ class Request
     {
         $body = [];
 
-        if ( $this->content_type == Mime::JSON )
-        {
-            $body[ 'json' ] = $this->serialized_payload;
+        if (!empty($this->files)) {
+            $data = [];
+
+            if(!is_null($this->serialized_payload)) {
+                collect($this->serialized_payload)->each(function($value, $key) use (&$data) {
+                    $data[] = [
+                        'name'     => $key,
+                        'contents' => $value,
+                    ];
+                });
+            }
+
+            $body['multipart'] = array_merge($this->files, $data);
+
+            return $body;
         }
-        elseif ( $this->method == Http::GET )
-        {
-            $body[ 'query' ] = $this->serialized_payload;
-        }
-        elseif ( is_array( $this->serialized_payload ) )
-        {
-            $body[ 'form_params' ] = $this->serialized_payload;
-        }
-        else
-        {
-            $body[ 'body' ] = $this->serialized_payload;
+
+        if ($this->content_type == Mime::JSON) {
+            $body['json'] = $this->serialized_payload;
+        } elseif ($this->method == Http::GET) {
+            $body['query'] = $this->serialized_payload;
+        } elseif (is_array($this->serialized_payload)) {
+            $body['form_params'] = $this->serialized_payload;
+        } else {
+            $body['body'] = $this->serialized_payload;
         }
 
         return $body;
@@ -429,22 +449,16 @@ class Request
     {
         $url = '';
 
-        if ( empty( $this->uri ) )
-        {
-            $url = $this->config[ 'url' ];
-        }
-        elseif ( str_contains( $this->uri, [ 'http', 'https' ] ) )
-        {
+        if (empty($this->uri)) {
+            $url = $this->config['url'];
+        } elseif (str_contains($this->uri, ['http', 'https'])) {
             $url = $this->uri;
-        }
-        elseif ( $this->config->has( 'url' ) )
-        {
-            $url = $this->config[ 'url' ] . $this->uri;
+        } elseif ($this->config->has('url')) {
+            $url = $this->config['url'] . $this->uri;
         }
 
-        if ( empty( $url ) )
-        {
-            throw new RuntimeException( 'Attempting to send a request before defining a URI endpoint.' );
+        if (empty($url)) {
+            throw new RuntimeException('Attempting to send a request before defining a URI endpoint.');
         }
 
         return $url;
@@ -458,7 +472,7 @@ class Request
      */
     private function hash()
     {
-        $this->hash = md5( $this->uri . serialize( $this->headers ) . serialize( $this->payload ) );
+        $this->hash = md5($this->uri . serialize($this->headers) . serialize($this->payload));
 
         return $this;
     }
