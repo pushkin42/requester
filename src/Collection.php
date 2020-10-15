@@ -3,7 +3,7 @@
  * Developer: Roquie
  * DateTime: 06.03.15 14:08
  * Current file name: Collection.php
- * 
+ *
  * All rights reserved (c)
  */
 
@@ -11,6 +11,7 @@ namespace Requester;
 
 use Closure;
 use Illuminate\Support\Collection as BaseCollection;
+use Illuminate\Support\Arr;
 
 class Collection extends BaseCollection
 {
@@ -88,7 +89,7 @@ class Collection extends BaseCollection
      */
     public function offsetGet($key)
     {
-        $result = array_get($this->items, $key);
+        $result = Arr::get($this->items, $key);
 
         if (is_array($result))
             return new static($result);
@@ -121,7 +122,7 @@ class Collection extends BaseCollection
      */
     public function offsetExists($key)
     {
-        return (bool) array_get($this->items, $key);
+        return (bool) Arr::get($this->items, $key);
     }
 
 }
