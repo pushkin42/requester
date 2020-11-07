@@ -451,7 +451,7 @@ class Request
 
         if (empty($this->uri)) {
             $url = $this->config['url'];
-        } elseif (str_contains($this->uri, ['http', 'https'])) {
+        } elseif (Str::contains($this->uri, ['http', 'https'])) {
             $url = $this->uri;
         } elseif ($this->config->has('url')) {
             $url = $this->config['url'] . $this->uri;
