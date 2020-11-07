@@ -15,6 +15,7 @@ use GuzzleHttp\Psr7\Response;
 use Requester\Handler\DefaultHandler;
 use Requester\Interfaces\HandlerInterface;
 use RuntimeException;
+use Illuminate\Support\Str;
 
 class Request
 {
