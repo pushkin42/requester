@@ -14,8 +14,7 @@
         "ext-json" : "*",
         "guzzlehttp/guzzle": "^6.3|^7.0",
         "monolog/monolog": "2.*",
-        "tedivm/stash": "^0.15.2",
-        "illuminate/support": "6.*|^7.0"
+        "tedivm/stash": "^0.15.2"
     },
     "autoload": {
         "psr-4": {
