@@ -12,7 +12,7 @@
     "require": {
         "php": "^7.3|^8.0",
         "ext-json" : "*",
-        "guzzlehttp/guzzle": "^6.3|^7.0",
+        "guzzlehttp/guzzle": "^7.2",
         "monolog/monolog": "2.*",
         "tedivm/stash": "^0.16.0"
     },
